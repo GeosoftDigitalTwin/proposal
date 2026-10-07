@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GeoSoft — From 3D Digital Twin to Live Structural Intelligence</title>
+<meta name="description" content="Proposal: converting the GeoSoft 3D digital twin into a full structural analysis platform, a reduced-order model, and a live monitoring twin.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#0C100E;--surface:#151B17;--surface2:#1C2520;--surface3:#243029;--line:#2A3630;--line2:#3B4C43;
+ --text:#F2F6F3;--muted:#9CACA2;--dim:#6E7F76;--accent:#3BE08F;--accent2:#7FF2BC;--ink:#042014;
+ --done:#3BE08F;--now:#F2B53A;--soon:#5FA8FF;--later:#A394FF;--warn:#EF8B5A;
+ --font:"Inter",system-ui,-apple-system,sans-serif;--head:"Inter Tight","Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+ box-sizing:border-box;color-scheme:dark}
+@media(prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#F2F6F3;--surface:#FFF;--surface2:#EBF2EE;--surface3:#DFEAE3;--line:#CAD8D1;--line2:#AEC1B6;--text:#0F1512;--muted:#4D6157;--dim:#6A7E73;--accent:#0E9D58;--accent2:#0A6E3E;--ink:#FFF;--done:#0E9D58;--now:#B07708;--soon:#1E62C9;--later:#6246C7;--warn:#C2521C;color-scheme:light}}
+:root[data-theme=light]{--bg:#F2F6F3;--surface:#FFF;--surface2:#EBF2EE;--surface3:#DFEAE3;--line:#CAD8D1;--line2:#AEC1B6;--text:#0F1512;--muted:#4D6157;--dim:#6A7E73;--accent:#0E9D58;--accent2:#0A6E3E;--ink:#FFF;--done:#0E9D58;--now:#B07708;--soon:#1E62C9;--later:#6246C7;--warn:#C2521C;color-scheme:light}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--font);-webkit-font-smoothing:antialiased;overflow:hidden;
+ padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);display:flex;flex-direction:column}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:5px}
+h1,h2,h3{font-family:var(--head);line-height:1.16;margin:0;letter-spacing:-.022em}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* chrome */
+.bar{flex:none;display:flex;align-items:center;gap:13px;padding:11px clamp(14px,3vw,34px);border-bottom:1px solid var(--line);background:var(--surface)}
+.brand{display:flex;align-items:center;gap:9px}
+.brand svg{width:36px;height:25px;flex:none}
+.brand b{font:600 1rem var(--head);display:block;line-height:1.15}
+.brand span{font-size:.72rem;color:var(--muted)}
+.sp{flex:1}
+.dots{display:flex;gap:5px;align-items:center}
+.dots button{width:9px;height:9px;border-radius:50%;border:0;background:var(--line2);cursor:pointer;padding:0;transition:.2s}
+.dots button.on{background:var(--accent);width:24px;border-radius:5px}
+.ib{width:33px;height:33px;border-radius:9px;border:1px solid var(--line2);background:transparent;cursor:pointer;flex:none}
+
+/* stage */
+.stage{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.slide{min-height:100%;display:none;padding:clamp(22px,4vh,48px) clamp(16px,5vw,64px) 40px;max-width:1180px;margin:0 auto;animation:in .34s ease}
+.slide.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.slide{animation:none}.stage{scroll-behavior:auto}}
+.kicker{font:600 .7rem var(--head);letter-spacing:.17em;text-transform:uppercase;color:var(--accent);margin-bottom:11px;display:flex;align-items:center;gap:9px}
+.kicker .step{background:var(--accent);color:var(--ink);border-radius:5px;padding:2px 7px;letter-spacing:.06em}
+h2.big{font-size:clamp(1.55rem,3.7vw,2.5rem);font-weight:700;margin-bottom:14px}
+p.lede{font-size:clamp(1rem,1.5vw,1.14rem);color:var(--muted);max-width:74ch;margin:0 0 22px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px 19px}
+.card h3{font-size:1.02rem;font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:8px}
+.card p{margin:0;color:var(--muted);font-size:.92rem}
+.card ul{margin:9px 0 0;padding-left:18px;color:var(--muted);font-size:.9rem}
+.card ul li{margin:4px 0}
+.ico{width:28px;height:28px;border-radius:8px;background:var(--surface3);display:grid;place-items:center;flex:none;color:var(--accent);font:600 .8rem var(--mono)}
+.tag{display:inline-flex;align-items:center;gap:5px;font:600 .67rem var(--font);padding:2px 9px;border-radius:99px;white-space:nowrap}
+.tag.done{background:var(--done);color:var(--ink)}
+.tag.now{background:var(--now);color:#2a1a00}
+.tag.soon{background:transparent;color:var(--soon);border:1px solid var(--soon)}
+.tag.later{background:transparent;color:var(--later);border:1px solid var(--later)}
+.tag.oss{background:color-mix(in srgb,var(--done) 16%,transparent);color:var(--done);border:1px solid color-mix(in srgb,var(--done) 44%,transparent)}
+.tag.build{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 44%,transparent)}
+.note{border-left:3px solid var(--accent);background:var(--surface2);border-radius:0 11px 11px 0;padding:13px 17px;margin:18px 0 0;font-size:.93rem}
+.note.warn{border-left-color:var(--now)}
+.note b{display:block;margin-bottom:3px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+.tw{border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:52vh}
+th{text-align:left;background:var(--surface2);color:var(--muted);font-weight:600;padding:9px 13px;font-size:.78rem;position:sticky;top:0;white-space:nowrap}
+td{padding:9px 13px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);vertical-align:top}
+td.nw{white-space:nowrap}
+.flow{display:flex;align-items:stretch;gap:7px;flex-wrap:wrap;margin:6px 0 20px}
+.flow .fx{flex:1;min-width:118px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+.flow .fx.hi{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.flow .fx b{display:block;font:600 .9rem var(--head);margin-bottom:3px}
+.flow .fx span{font-size:.79rem;color:var(--muted)}
+.flow .ar{display:grid;place-items:center;color:var(--dim);font-size:1.1rem;flex:none}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:15px 17px}
+.stat b{display:block;font:700 1.75rem var(--mono);color:var(--accent);line-height:1.1}
+.stat small{font-size:.8rem;color:var(--muted);display:block;margin-top:3px}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin:4px 0 18px}
+.vs .side{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px}
+.vs .side.a{border-color:var(--now)}
+.vs .side.b{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.vs .mid{font:700 1rem var(--head);color:var(--dim)}
+.vs h3{font-size:.96rem;margin-bottom:9px}
+.vs .num{font:700 2rem var(--mono);line-height:1.05}
+.vs .a .num{color:var(--now)}.vs .b .num{color:var(--accent)}
+ol.ck{list-style:none;margin:0;padding:0;counter-reset:c}
+ol.ck li{counter-increment:c;position:relative;padding:0 0 11px 32px;font-size:.93rem}
+ol.ck li::before{content:counter(c);position:absolute;left:0;top:1px;width:21px;height:21px;border-radius:50%;background:var(--surface3);border:1px solid var(--line2);display:grid;place-items:center;font:600 .66rem var(--mono);color:var(--accent)}
+ol.ck b{font-weight:600}
+ol.ck span{color:var(--muted)}
+.hero{display:grid;place-items:center;min-height:calc(100vh - 150px);text-align:center}
+.hero h1{font-size:clamp(2rem,6vw,4rem);font-weight:700;margin-bottom:16px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{color:var(--muted);font-size:clamp(1rem,1.9vw,1.25rem);max-width:60ch;margin:0 auto 26px}
+.hero .meta{color:var(--dim);font-size:.85rem;margin-top:26px}
+
+/* footer nav */
+.foot{flex:none;display:flex;align-items:center;gap:11px;padding:10px clamp(14px,3vw,34px);border-top:1px solid var(--line);background:var(--surface)}
+.nb{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:9px;border:1px solid var(--line2);background:transparent;cursor:pointer;font-size:.88rem;font-weight:500}
+.nb:disabled{opacity:.35;cursor:default}
+.nb.pri{background:var(--accent);color:var(--ink);border-color:var(--accent);font-weight:600}
+.pg{font:600 .8rem var(--mono);color:var(--dim)}
+.ttl{font-size:.85rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:700px){.vs{grid-template-columns:1fr}.vs .mid{text-align:center}.ttl{display:none}}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="brand">
+    <svg viewBox="0 0 64 44" aria-hidden="true"><circle cx="23" cy="22" r="13" fill="none" stroke="#3BE08F" stroke-width="7"/><path d="M41 9a13 13 0 1 1-12.6 16.2" fill="none" stroke="#7FF2BC" stroke-width="7" stroke-linecap="round"/></svg>
+    <div><b>GeoSoft<sup style="font-size:.5em">®</sup> Global</b><span>Structural Intelligence proposal</span></div>
+  </div>
+  <span class="sp"></span>
+  <div class="dots" id="dots" role="tablist" aria-label="Pages"></div>
+  <button class="ib" id="theme" type="button" aria-label="Switch light or dark theme">◐</button>
+</div>
+
+<main class="stage" id="stage">
+
+<!-- 1 -->
+<section class="slide on" data-t="Title">
+  <div class="hero">
+    <div>
+      <div class="kicker" style="justify-content:center">Proposal to the Chief Executive</div>
+      <h1>From a 3D digital twin to <em>live structural intelligence</em></h1>
+      <p>We already show the asset. This is how we make the platform understand it, analyse it, and watch over it — in seconds, every day of its life.</p>
+      <div class="g3" style="max-width:760px;margin:0 auto">
+        <div class="stat"><b>Today</b><small>3D digital twin: we can see the asset</small></div>
+        <div class="stat"><b>Step 1</b><small>Analyse it to offshore standards</small></div>
+        <div class="stat"><b>Step 2</b><small>Reduce it, then monitor it live</small></div>
+      </div>
+      <div class="meta">Use the arrow keys, or the buttons below, to move through the pages.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide" data-t="Where we are today">
+  <div class="kicker"><span class="step">WHERE WE ARE</span> Already delivered</div>
+  <h2 class="big">GeoSoft has the 3D digital twin</h2>
+  <p class="lede">The hard, expensive part of the foundation is done. We capture reality, we build the 3D environment, and the client can open their asset in a browser and look at it.</p>
+  <div class="g3">
+    <div class="card"><h3><span class="ico">✓</span>Reality capture</h3><p>Laser scanning, drone and ROV survey, photogrammetry, bathymetry.</p></div>
+    <div class="card"><h3><span class="ico">✓</span>3D environment</h3><p>Point clouds, BIM, GIS and reality meshes in one browser-based scene.</p></div>
+    <div class="card"><h3><span class="ico">✓</span>Asset information</h3><p>Documents, inspection records and operational dashboards tied to the model.</p></div>
+  </div>
+  <div class="note"><b>The limitation we are proposing to remove</b>Today the platform answers <i>"what does the asset look like?"</i>. It cannot answer <i>"is it safe, how is it behaving, and how long will it last?"</i>. Those are the questions the client actually pays engineers for — and today they pay someone else.</div>
+</section>
+
+<!-- 3 -->
+<section class="slide" data-t="What we will build">
+  <div class="kicker"><span class="step">THE PLAN</span> Three moves</div>
+  <h2 class="big">What we are proposing to build</h2>
+  <p class="lede">Three moves, in order. Each one is useful on its own and sells on its own, and each makes the next one possible.</p>
+  <div class="flow">
+    <div class="fx hi"><b>1 · Analyse</b><span>Convert the 3D model into a structural analysis model, and analyse it to offshore standards.</span></div>
+    <span class="ar">›</span>
+    <div class="fx hi"><b>2 · Reduce</b><span>Extract a reduced-order model so the same structure answers any new loading in seconds.</span></div>
+    <span class="ar">›</span>
+    <div class="fx hi"><b>3 · Monitor</b><span>Feed live sensor data into that reduced model and run a continuous structural health dashboard.</span></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h3>Why this order matters</h3><p>The reduced model is <b>extracted from</b> the full analysis — it cannot exist before it. And live monitoring is only credible if it runs on a model an engineer has already signed. So the sequence is not negotiable.</p></div>
+    <div class="card"><h3>What the client gets at each stage</h3><ul>
+      <li><b>After move 1:</b> a full structural assessment they may need anyway</li>
+      <li><b>After move 2:</b> same-day answers to "can we put this equipment here?"</li>
+      <li><b>After move 3:</b> continuous condition monitoring and evidence for life extension</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide" data-t="Step 1 — Analytical model">
+  <div class="kicker"><span class="step">MOVE 1 · A</span> Conversion</div>
+  <h2 class="big">3D model → structural analysis model</h2>
+  <p class="lede">A 3D model is drawn for looking at. An analysis model is built for calculating with. Converting one into the other is the step every competitor glosses over, and it is where GeoSoft's existing strength gives us the advantage.</p>
+  <div class="g2">
+    <div class="card"><h3>What the software does automatically</h3>
+      <ul>
+        <li>Reads the client's model: IFC, SACS, STAAD or a scan</li>
+        <li>Extracts every member with its section, length and orientation</li>
+        <li>Finds the joints and splits members where they truly connect</li>
+        <li>Fixes what BIM gets wrong: members modelled face to face, levels out by millimetres, braces crossing without a joint, plates floating above their beams</li>
+        <li>Flags anything it cannot read, rather than filling it with a guess</li>
+      </ul>
+    </div>
+    <div class="card"><h3>Why this is the differentiator</h3>
+      <p>Everyone else starts from a clean analysis model somebody else built. We start from the client's real, aged, poorly documented asset and produce the analysis model from it. That is the part operators actually struggle with.</p>
+      <div class="note" style="margin-top:14px"><b>Already working</b>This conversion is built and tested: a messy model with disconnected parts and unconnected joints was healed into one analysable structure, with every change recorded for engineer review.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="slide" data-t="GeoSoft Modeller">
+  <div class="kicker"><span class="step">MOVE 1 · B</span> The engineer's workspace</div>
+  <h2 class="big">The GeoSoft Modeller</h2>
+  <p class="lede">Automatic conversion gets most of the way. An engineer must be able to check it and correct it — so the Modeller gives them every tool they expect from a finite element package, in the browser.</p>
+  <div class="g3">
+    <div class="card"><h3>Geometry</h3><p>Node, beam, plate and solid cursors. Add, move, copy, mirror, rotate, repeat. Grids, snapping and coordinate tables.</p></div>
+    <div class="card"><h3>Properties</h3><p>Section library by country, user-defined sections, plate thickness, member orientation.</p></div>
+    <div class="card"><h3>Materials</h3><p>Steel grades, concrete, aluminium, user-defined. Yield strength entered by the engineer, never assumed.</p></div>
+    <div class="card"><h3>Specifications</h3><p>Member releases, offsets, truss and tension-only members, inactive members.</p></div>
+    <div class="card"><h3>Supports</h3><p>Fixed, pinned, springs, enforced displacements, inclined and foundation supports.</p></div>
+    <div class="card"><h3>Checking</h3><p>Duplicate nodes, free ends, overlapping members, connectivity, missing properties — all found and selectable.</p></div>
+  </div>
+  <div class="note"><b>The principle behind it</b>The software does the work; the engineer stays responsible. Everything the conversion changed is coloured and listed, so it can be reviewed rather than trusted blindly.</div>
+</section>
+
+<!-- 6 -->
+<section class="slide" data-t="Loads">
+  <div class="kicker"><span class="step">MOVE 1 · C</span> Loading</div>
+  <h2 class="big">Applying the loads</h2>
+  <p class="lede">Some loads the software works out for itself. Some come from the client's records and are entered by our engineer. The environmental loads are generated from the site's metocean criteria.</p>
+  <div class="g3">
+    <div class="card"><h3><span class="tag done">AUTOMATIC</span></h3>
+      <p><b>Self-weight</b> of the whole structure, computed member by member from section, length and density — with allowances for welds, fittings and coatings kept separate and visible.</p></div>
+    <div class="card"><h3><span class="tag now">ENGINEER ENTERS</span></h3>
+      <p><b>Equipment and piping loads</b> from the client's design documents. Where equipment has been changed since design, the new weight and position are entered and the difference is immediately visible.</p>
+      <ul><li>Equipment weight and centre of gravity</li><li>Piping dry, operating and hydrotest weights</li><li>Pipe-stress support reactions, imported directly</li><li>Live and laydown areas by deck zone</li></ul></div>
+    <div class="card"><h3><span class="tag soon">GENERATED</span></h3>
+      <p><b>Environmental loads</b> from the site criteria:</p>
+      <ul><li>Wave loading on every submerged member</li><li>Current, combined with the wave kinematics</li><li>Wind on the topsides and exposed steel</li><li>Marine growth on diameter and weight</li><li>Seismic, as response spectrum or time history</li></ul></div>
+  </div>
+  <div class="note"><b>Load combinations</b>Every combination records its code, edition, clause and factors, so any result can be traced back to the rule that produced it.</div>
+</section>
+
+<!-- 7 -->
+<section class="slide" data-t="Analysis">
+  <div class="kicker"><span class="step">MOVE 1 · D</span> Analysis</div>
+  <h2 class="big">What the analysis delivers</h2>
+  <p class="lede">The same analyses an offshore engineer runs in SACS today, with the same outputs, produced inside our platform.</p>
+  <div class="g2">
+    <div class="card"><h3><span class="tag soon">STATIC</span></h3>
+      <ul><li>Unity check (UC) ratios for every member</li><li>Deflections and displacements</li><li>Stresses and strains</li><li>Bending moments, shear and axial forces</li><li>Support reactions</li><li>Code checks to API RP 2A and ISO 19902</li></ul></div>
+    <div class="card"><h3><span class="tag soon">DYNAMIC</span></h3>
+      <ul><li>Eigenvalue extraction: natural frequencies</li><li>Mode shapes</li><li>Response spectrum analysis</li><li>Time history analysis</li><li>Stiffness and mass matrices extracted and retained</li></ul></div>
+    <div class="card"><h3><span class="tag soon">FATIGUE</span></h3>
+      <ul><li>Stress concentration factors at every tubular joint</li><li>Hot-spot stress ranges</li><li>S-N curves with thickness correction</li><li>Cumulative damage and remaining fatigue life</li></ul></div>
+    <div class="card"><h3><span class="tag later">LATER</span></h3>
+      <ul><li>Pushover and collapse analysis</li><li>Non-linear pile and soil interaction</li><li>These are the hardest modules and the least used in service, so they come last</li></ul></div>
+  </div>
+  <div class="note"><b>Why the stiffness matrices matter</b>They are not just an intermediate step. Once extracted, they are exactly what the reduced-order model is built from — which is the next move.</div>
+</section>
+
+<!-- 8 -->
+<section class="slide" data-t="Technology & licensing">
+  <div class="kicker"><span class="step">TECHNOLOGY</span> How we build it</div>
+  <h2 class="big">Open source where we can, our own code where we must</h2>
+  <p class="lede">We will build on permissively licensed open source — MIT, BSD and Apache 2.0 — which can go into a commercial product without exposing our own code. The offshore engineering itself has no open-source equivalent and will be written from the published standards.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Capability</th><th>Source</th><th>Licence</th><th>Position</th></tr></thead>
+    <tbody>
+      <tr><td>Linear algebra, eigenvalue solvers</td><td class="mono">SciPy · ARPACK · PETSc · Eigen</td><td class="nw"><span class="tag oss">BSD / MPL</span></td><td>Use directly</td></tr>
+      <tr><td>Reduced-order modelling framework</td><td class="mono">pyMOR</td><td class="nw"><span class="tag oss">BSD-2</span></td><td>Use directly</td></tr>
+      <tr><td>Wave kinematics (stream function, Stokes)</td><td class="mono">raschii</td><td class="nw"><span class="tag oss">Apache-2.0</span></td><td>Use directly</td></tr>
+      <tr><td>Wave spectra and sea-state statistics</td><td class="mono">wavespectra</td><td class="nw"><span class="tag oss">MIT</span></td><td>Use directly</td></tr>
+      <tr><td>Metocean hindcast data access</td><td class="mono">cdsapi (ERA5)</td><td class="nw"><span class="tag oss">Apache-2.0</span></td><td>Use directly</td></tr>
+      <tr><td>Rainflow cycle counting for fatigue</td><td class="mono">rainflow</td><td class="nw"><span class="tag oss">MIT</span></td><td>Use directly</td></tr>
+      <tr><td>Section properties</td><td class="mono">sectionproperties</td><td class="nw"><span class="tag oss">MIT</span></td><td>Use directly</td></tr>
+      <tr><td>Sensor transport and time-series storage</td><td class="mono">paho-mqtt · TimescaleDB</td><td class="nw"><span class="tag oss">EPL · Apache</span></td><td>Use directly</td></tr>
+      <tr><td>Heavy general-purpose FE solvers</td><td class="mono">CalculiX · code_aster</td><td class="nw"><span class="tag build">GPL</span></td><td>Separate service behind an API only — never linked into our code</td></tr>
+      <tr><td>Non-linear and pushover reference</td><td class="mono">OpenSees</td><td class="nw"><span class="tag build">RESTRICTED</span></td><td>Free internally, but a commercial licence is required to ship it</td></tr>
+      <tr><td>API RP 2A / ISO 19902 member and joint checks</td><td>—</td><td class="nw"><span class="tag build">WE BUILD</span></td><td>No open source exists. Written from the standards, then independently verified</td></tr>
+      <tr><td>Tubular joint stress concentration factors</td><td>—</td><td class="nw"><span class="tag build">WE BUILD</span></td><td>From ISO 19902</td></tr>
+      <tr><td>S-N fatigue curves</td><td>—</td><td class="nw"><span class="tag build">WE BUILD</span></td><td>From DNV-RP-C203</td></tr>
+      <tr><td>Pile and soil curves (p-y, t-z, q-z)</td><td>—</td><td class="nw"><span class="tag build">WE BUILD</span></td><td>From API RP 2A</td></tr>
+      <tr><td>Morison wave loading, wind profiles</td><td>—</td><td class="nw"><span class="tag build">WE BUILD</span></td><td>Standard formulae, straightforward to implement</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note warn"><b>Action required before committing</b>Every licence above must be verified against each project's own current terms before release, not taken from this summary. Mixed-licence repositories and bundled dependencies are a known trap. This is a short piece of legal and technical due diligence, and it should be done before any code is written.</div>
+</section>
+
+<!-- 9 -->
+<section class="slide" data-t="Deliverables and timeline">
+  <div class="kicker"><span class="step">MOVE 1 · OUTCOME</span> What the client receives</div>
+  <h2 class="big">The full analysis: outputs, and how long it takes</h2>
+  <p class="lede">At the end of move 1 the client has a complete structural assessment of their asset, signed by an engineer. This is a deliverable we can invoice on its own.</p>
+  <div class="g2">
+    <div class="card"><h3>Delivered to the client</h3><ul>
+      <li>Analytical model of their asset, kept and reusable</li>
+      <li>Unity check ratios for every member, with the governing load combination</li>
+      <li>Deflections, stresses, strains, moments and shears</li>
+      <li>Natural frequencies and mode shapes</li>
+      <li>Fatigue damage and remaining life per joint</li>
+      <li>Support and pile reactions</li>
+      <li>Code compliance report with every calculation traceable to its clause</li>
+    </ul></div>
+    <div class="card" style="border-color:var(--now)"><h3><span class="tag now">BE HONEST ABOUT THIS</span></h3>
+      <p>A full finite element analysis of a real platform is <b>not</b> fast, and we should never suggest otherwise:</p>
+      <ul>
+        <li><b>Small structure:</b> days to weeks</li>
+        <li><b>Typical jacket:</b> three weeks to a month</li>
+        <li><b>Large or complex jacket:</b> two to three months</li>
+      </ul>
+      <p style="margin-top:9px">Most of that is not computing time. It is building and checking the model, chasing missing data, agreeing assumptions, and verifying results — which is exactly the engineering a client is paying for.</p>
+    </div>
+  </div>
+  <div class="note"><b>And this is precisely why move 2 matters</b>Having paid for that analysis once, the client should not have to wait weeks again every time a load changes. That is the problem the reduced-order model solves.</div>
+</section>
+
+<!-- 10 -->
+<section class="slide" data-t="The ROM">
+  <div class="kicker"><span class="step">MOVE 2</span> The breakthrough</div>
+  <h2 class="big">The reduced-order model: months become seconds</h2>
+  <p class="lede">Once the full analysis is done, we extract a reduced-order model from the stiffness and mass matrices we already have. It is a mathematical step, not another analysis — it takes seconds, and no extra engineering.</p>
+  <div class="vs">
+    <div class="side a"><h3>Full analysis</h3><div class="num">2–3 months</div><p style="color:var(--muted);font-size:.9rem;margin:7px 0 0">Every time the client asks a new question. Tens of thousands of equations, model checks, engineer review.</p></div>
+    <div class="mid">→</div>
+    <div class="side b"><h3>Reduced-order model</h3><div class="num">Seconds</div><p style="color:var(--muted);font-size:.9rem;margin:7px 0 0">Every new loading condition on the same structure. Same physics, a few hundred equations instead of tens of thousands.</p></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h3>What it can answer in seconds</h3><ul>
+      <li>"We want to put a 40-tonne skid here — is the deck adequate?"</li>
+      <li>"What happens in a 100-year storm from the north-east?"</li>
+      <li>"The live load on this area is going up 20% — what moves?"</li>
+      <li>"This brace has lost 3 mm — what does that change?"</li>
+      <li>"What is the structure doing right now, in today's sea state?"</li>
+    </ul></div>
+    <div class="card"><h3>What stays unchanged</h3>
+      <p>The reduced model holds the <b>structure only</b>. Loads are computed fresh each time and fed into it. Nothing is re-opened, nothing is re-analysed. The only thing that invalidates it is a change to the steel itself — and then it is re-extracted in seconds.</p>
+      <div class="note" style="margin-top:12px"><b>Proven already</b>We have a working prototype: a frame reduced from 87 equations to 8, checked against hand calculations exactly, and verified across 200 random load cases automatically.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="slide" data-t="ROM technology">
+  <div class="kicker"><span class="step">MOVE 2 · TECHNOLOGY</span> Method selection</div>
+  <h2 class="big">How we build the reduced model</h2>
+  <p class="lede">This family of methods is called reduced-basis finite element analysis. Several techniques exist. We have chosen the two that suit our models and our timescale, and deliberately deferred the rest.</p>
+  <div class="g2">
+    <div class="card" style="border-color:var(--accent)"><h3><span class="tag done">BUILD NOW</span></h3>
+      <ol class="ck">
+        <li><b>Modal truncation</b><span>Keep the structure's dominant mode shapes. Simple, fast to extract, and sufficient for global response, sway, frequency tracking and live monitoring. This is what our prototype already does.</span></li>
+        <li><b>Craig-Bampton reduction</b><span>Keep chosen points exactly — sensor locations, fatigue-critical joints, pile heads — and reduce only the interior. This gives accurate stress where we need it, which modal truncation alone does not. Essential for fatigue.</span></li>
+      </ol>
+    </div>
+    <div class="card"><h3><span class="tag later">LATER, AND ONLY IF NEEDED</span></h3>
+      <ol class="ck">
+        <li><b>Proper orthogonal decomposition (POD)</b><span>Builds the basis from snapshots of many solved cases.</span></li>
+        <li><b>Reduced basis with greedy training</b><span>Spans a family of different structures, not just one.</span></li>
+        <li><b>Balanced truncation</b><span>From control theory; keeps what is both controllable and observable.</span></li>
+        <li><b>Proper generalised decomposition (PGD)</b><span>Builds the solution as a product of separate parameter functions.</span></li>
+      </ol>
+      <p style="margin-top:10px"><b>Why deferred:</b> these methods earn their complexity when the model must <i>learn</i> across many structural variations — hundreds of training analyses, a far larger build. We do not have that requirement today. Modal truncation and Craig-Bampton give us the capability we are actually selling.</p>
+    </div>
+  </div>
+  <div class="note"><b>One capability we will add early regardless</b>An accuracy indicator on every reduced solve, measuring how well the reduced answer satisfies the full equations. It means the fast model can state its own reliability rather than asking to be trusted — which is what a regulator or class society will expect.</div>
+</section>
+
+<!-- 12 -->
+<section class="slide" data-t="Live monitoring">
+  <div class="kicker"><span class="step">MOVE 3</span> The living twin</div>
+  <h2 class="big">Live structural health monitoring</h2>
+  <p class="lede">With a reduced model that answers in milliseconds, the platform can finally run continuously against real measurements. This is the point at which GeoSoft's digital twin becomes genuinely alive.</p>
+  <div class="flow">
+    <div class="fx"><b>Sensors</b><span>Wave radar, current profiler, anemometer, accelerometers, strain gauges, GNSS, inclinometers, corrosion probes.</span></div>
+    <span class="ar">›</span>
+    <div class="fx"><b>Loads</b><span>Measured sea state turned into forces on the real geometry, exactly as in the full analysis.</span></div>
+    <span class="ar">›</span>
+    <div class="fx hi"><b>Reduced model</b><span>Solved in milliseconds. Stress and deflection recovered everywhere.</span></div>
+    <span class="ar">›</span>
+    <div class="fx"><b>Dashboard</b><span>Live stresses, strains, utilization, alarms, accumulated fatigue damage, remaining life.</span></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h3>What the operator sees</h3><ul>
+      <li>How the structure is behaving right now, in today's sea state</li>
+      <li>Utilization of every member, updating continuously</li>
+      <li>Measured strain against predicted strain — the earliest sign that something has changed</li>
+      <li>Natural frequency trend, which shifts if a member is lost</li>
+      <li>Fatigue damage accumulating from the sea they actually got, not a design assumption</li>
+      <li>Immediate assessment after a storm, impact or earthquake</li>
+    </ul></div>
+    <div class="card"><h3>What it is worth to them</h3><ul>
+      <li>Fewer inspection vessel days — the largest single cost in platform integrity</li>
+      <li>Fewer people offshore</li>
+      <li>Evidence for life extension, based on measured history</li>
+      <li>Same-day answers instead of a six-week re-analysis</li>
+      <li>Decommissioning deferred, which dwarfs every other saving</li>
+    </ul></div>
+  </div>
+  <div class="note"><b>We can demonstrate this before a single sensor is bought</b>The same chain runs on historical metocean data. The client sees their own platform's twin working, and the sensors become an upgrade rather than an act of faith.</div>
+</section>
+
+<!-- 13 -->
+<section class="slide" data-t="Summary and ask">
+  <div class="kicker"><span class="step">SUMMARY</span> The proposal</div>
+  <h2 class="big">What I am asking for</h2>
+  <div class="g2">
+    <div class="card"><h3>The sequence, once more</h3>
+      <ol class="ck">
+        <li><b>Convert</b><span>3D model to analytical model, opened in the GeoSoft Modeller, corrected by an engineer.</span></li>
+        <li><b>Load</b><span>Self-weight automatic; equipment and piping from the client's records; environmental loads generated.</span></li>
+        <li><b>Analyse</b><span>Static, dynamic and fatigue, to offshore standards, with every output the client expects. Weeks to months, once.</span></li>
+        <li><b>Reduce</b><span>Extract the reduced-order model from the matrices we already have. Seconds, no extra analysis.</span></li>
+        <li><b>Simulate</b><span>Any new loading condition answered in seconds, for the life of the asset.</span></li>
+        <li><b>Monitor</b><span>Live sensor data into the reduced model, continuous dashboard, measured fatigue and remaining life.</span></li>
+      </ol>
+    </div>
+    <div class="card"><h3>Where we stand today</h3>
+      <ul>
+        <li><b>Built and verified:</b> import, conversion and joint healing; the Modeller; the loading module; self-weight analysis with support reactions checked against hand calculations; a working reduced-order prototype</li>
+        <li><b>In progress:</b> the full solver, which everything else stands on</li>
+        <li><b>Needed:</b> engineering time to write the code checks and fatigue modules, and a verification programme so results can be defended</li>
+      </ul>
+      <div class="note" style="margin-top:14px"><b>The honest position</b>Permissive open source gives us the mathematics — perhaps a third of the work. The remaining two-thirds is offshore engineering and verification. Verification is not optional: it is what an auditor will ask for, and it is what separates a product from a demonstration.</div>
+    </div>
+  </div>
+  <div class="note" style="border-left-color:var(--accent)"><b>The strategic case in one sentence</b>Every competitor sells either a 3D viewer or an analysis package. GeoSoft would be the only one that takes a client's real, aged, poorly documented asset, produces a trustworthy analysis model from it, and then keeps that model alive against live data — which is exactly the combination our existing capability already positions us for.</div>
+</section>
+
+</main>
+
+<div class="foot">
+  <button class="nb" id="prev" type="button">‹ Back</button>
+  <button class="nb pri" id="next" type="button">Next ›</button>
+  <span class="pg" id="pg"></span>
+  <span class="ttl" id="ttl"></span>
+  <span class="sp"></span>
+  <button class="nb" id="print" type="button">Print / PDF</button>
+</div>
+
+<script>
+const slides=[...document.querySelectorAll(".slide")];
+let i=0;
+const dots=document.getElementById("dots"),stage=document.getElementById("stage");
+dots.innerHTML=slides.map((s,k)=>`<button role="tab" data-k="${k}" aria-label="Page ${k+1}: ${s.dataset.t}" title="${s.dataset.t}"></button>`).join("");
+function go(k){
+  i=Math.max(0,Math.min(slides.length-1,k));
+  slides.forEach((s,n)=>s.classList.toggle("on",n===i));
+  [...dots.children].forEach((d,n)=>{d.classList.toggle("on",n===i);d.setAttribute("aria-selected",n===i)});
+  document.getElementById("pg").textContent=String(i+1).padStart(2,"0")+" / "+String(slides.length).padStart(2,"0");
+  document.getElementById("ttl").textContent=slides[i].dataset.t;
+  document.getElementById("prev").disabled=i===0;
+  const nx=document.getElementById("next");
+  nx.textContent=i===slides.length-1?"Back to start":"Next ›";
+  stage.scrollTop=0;
+}
+document.getElementById("next").addEventListener("click",()=>go(i===slides.length-1?0:i+1));
+document.getElementById("prev").addEventListener("click",()=>go(i-1));
+dots.addEventListener("click",e=>{const b=e.target.closest("button[data-k]");if(b)go(+b.dataset.k)});
+addEventListener("keydown",e=>{
+  if(e.target.matches("input,textarea"))return;
+  if(e.key==="ArrowRight"||e.key==="PageDown"||e.key===" "){e.preventDefault();go(i+1)}
+  else if(e.key==="ArrowLeft"||e.key==="PageUp"){e.preventDefault();go(i-1)}
+  else if(e.key==="Home"){go(0)}else if(e.key==="End"){go(slides.length-1)}
+});
+let tx=null;
+stage.addEventListener("touchstart",e=>{tx=e.changedTouches[0].clientX},{passive:true});
+stage.addEventListener("touchend",e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>70)go(i+(d<0?1:-1));tx=null},{passive:true});
+document.getElementById("print").addEventListener("click",()=>{
+  slides.forEach(s=>s.classList.add("on"));
+  const st=document.createElement("style");
+  st.textContent="@media print{body{overflow:visible;height:auto}.stage{overflow:visible}.slide{display:block!important;page-break-after:always;min-height:0}.bar,.foot{display:none}}";
+  document.head.appendChild(st);
+  setTimeout(()=>{print();st.remove();go(i)},60);
+});
+try{const t=localStorage.getItem("gs-pitch-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}
+document.getElementById("theme").addEventListener("click",()=>{
+  const c=document.documentElement.dataset.theme||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");
+  document.documentElement.dataset.theme=c==="light"?"dark":"light";
+  try{localStorage.setItem("gs-pitch-theme",document.documentElement.dataset.theme)}catch(e){}
+});
+go(0);
+</script>
+</body>
+</html>
